@@ -1,0 +1,68 @@
+---
+title: "data set creation with ed visit info, temp, pm2.5"
+author: "Annabel Tan"
+date: "2023-12-01"
+output: html_document
+---
+
+```{r, message=FALSE, warning=FALSE}
+#load libraries
+source("00_functions1.R")
+
+library(gridExtra)
+library(prism)
+library(here)
+library(ggplot2)
+library(dplyr)
+library(raster)
+library(reshape2)
+library(readr)
+library(lubridate)
+
+here::i_am("01_ed_dataset_creation.rmd")
+
+pm2015 = read.csv("data_pm25_aguilera/CAzip_wfpm25_2015.csv")
+temp = readRDS("prism_zip_day_ca_2013_2020.rds")
+ed2015 = read.csv("ed2015.csv")
+
+year = 2015
+temp <- temp %>%
+    filter(date >= paste0(year, "-01-01") & date <= paste0(year, "-12-31")) %>%
+    mutate(datenew = date)
+  
+  pm <- pm2015 %>%
+    mutate(datenew = as.Date(date),
+           zip = zip_code) %>%
+    filter(year(datenew) == year) 
+    
+  # Perform operations on the ED data
+  ed_processed <- ed2015 %>%
+    arrange(pat_id) %>%
+    mutate(datenew = as.Date(serv_dt, format = "%m/%d/%y"),
+           zip = patzip)
+
+
+
+```
+
+this part creates a dataframe structure with dates, diagnostic codes, age, race, ethnicity, max temp, mean dew point, pm2.5 levels 
+
+second function creates a new variable assigning cardiovascular conditions
+```{r}
+
+dat = merge_data_by_year(2015)
+
+dat %>% filter(rowSums(is.na(.)) > 0)
+
+
+dat1 = categorize_ICD9(dat)
+
+dat.complete.summary = dat1 %>%
+  group_by(zip) %>%
+  summarise(freq=n()) %>%
+  rename(hosps=freq)
+
+```
+
+
+

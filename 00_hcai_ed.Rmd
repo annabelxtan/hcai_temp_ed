@@ -1,0 +1,640 @@
+---
+title: "hcai ed data"
+author: "Annabel Tan"
+date: "2023-02-14"
+output: html_document
+---
+
+load libraries
+```{r, warning=FALSE, message=FALSE}
+
+library(tidyverse)
+library(DBI)
+library(RSQLite)
+library(here)
+library(vroom)
+
+library(data.table)
+library(readxl)
+
+here::i_am("00_hcai_ed.rmd")
+path = "data_original hcai files/"
+
+```
+
+2013
+```{r}
+
+mydb <- dbConnect(SQLite(), here("ed2013.sqlite3"))
+path = "data_original hcai files/"
+
+read_csv_chunked(here::here(paste0(path,"np_ED2013.csv")), 
+                 callback = function(chunk, dummy){
+      dbWriteTable(mydb, "ed2013", chunk, append = T)}, 
+      chunk_size = 1000000, col_names = TRUE, col_types = "cdddddddddddddddddddddddddddddddddcccddddddddddddddddddddddddddcddcd")
+dbListTables(mydb)
+
+ed2013table <- tbl(mydb, "ed2013")
+
+ed2013_impt= ed2013table %>%
+  select(dx_prin, faczip, fac_co, pat_id, patzip, patco, serv_dt, agyrserv, sex, eth, race,race_grp) %>%
+  collect()
+ 
+
+#CV filter
+ed2013_impt_cv = ed2013_impt %>%
+  filter(str_detect(dx_prin, "^4"))
+# 
+# #hypertension
+# ed2013_hypertension = ed2013_impt_cv %>%
+#      filter(str_detect(dx_prin, "^401") | str_detect(dx_prin, "^402") | str_detect(dx_prin, "^403") | str_detect(dx_prin, "^404") | str_detect(dx_prin, "^405"))
+
+# #mi 
+# ed2013_impt_mi = ed2013_impt_cv %>%
+#   filter(str_detect(dx_prin, "^410"))
+
+#ischemic heart disease
+ed2013_impt_ischemic = ed2013_impt_cv %>%
+  filter(str_detect(dx_prin, "^410") | str_detect(dx_prin, "^411") | str_detect(dx_prin, "^413"))
+
+#pulmonary embolism 
+ed2013_impt_pe = ed2013_impt_cv %>%
+  filter(str_detect(dx_prin, "^415"))
+
+#dysrhythmia and conduction disorder
+ed2013_impt_dys = ed2013_impt_cv %>%
+  filter(str_detect(dx_prin, "^426") | str_detect(dx_prin, "^427"))
+
+#heart failure
+ed2013_impt_hf = ed2013_impt_cv %>%
+  filter(str_detect(dx_prin, "^428"))
+
+#peripheral arterial disease
+ed2013_impt_pad = ed2013_impt_cv %>%
+  filter(str_detect(dx_prin, "^444"))
+
+#cerebrovascular disease
+ed2013_impt_cere = ed2013_impt_cv %>%
+  filter(str_detect(dx_prin, "^430") | str_detect(dx_prin, "^431") | str_detect(dx_prin, "^432") | str_detect(dx_prin, "^433") | str_detect(dx_prin, "^434") | str_detect(dx_prin, "^435") | str_detect(dx_prin, "^436") | str_detect(dx_prin, "^437") | str_detect(dx_prin, "^438"))
+
+ed2013_cv = rbind(ed2013_impt_ischemic, ed2013_impt_pe, ed2013_impt_dys, ed2013_impt_hf, ed2013_impt_pad, ed2013_impt_cere)
+
+write.csv(ed2013_cv, here("ed2013.csv"))
+
+dbDisconnect(mydb)
+
+```
+
+
+2014
+```{r}
+
+mydb1 <- dbConnect(SQLite(), here("ed2014.sqlite3"))
+path = "data_original hcai files/"
+
+read_csv_chunked(here::here(paste0(path,"np_ED2014.csv")), 
+                 callback = function(chunk, dummy){
+      dbWriteTable(mydb1, "ed2014", chunk, append = T)}, 
+      chunk_size = 1000000, col_names = TRUE, col_types = "cdddddddddddddddddddddddddddddddddcccddddddddddddddddddddddddddcddcd")
+dbListTables(mydb1)
+
+
+ed2014table <- tbl(mydb1, "ed2014")
+
+ed2014_impt= ed2014table %>%
+  select(dx_prin, faczip, fac_co, pat_id, patzip, patco, serv_dt, agyrserv, sex, race, eth, race, race_grp) %>%
+  collect()
+
+
+#CV filter
+ed2014_impt_cv = ed2014_impt %>%
+  filter(str_detect(dx_prin, "^4"))
+# 
+# #hypertension
+# ed2014_hypertension = ed2014_impt_cv %>%
+#      filter(str_detect(dx_prin, "^401") | str_detect(dx_prin, "^402") | str_detect(dx_prin, "^403") | str_detect(dx_prin, "^404") | str_detect(dx_prin, "^405"))
+# 
+# #mi 
+# ed2014_impt_mi = ed2014_impt_cv %>%
+#   filter(str_detect(dx_prin, "^410"))
+
+#ischemic heart disease
+ed2014_impt_ischemic = ed2014_impt_cv %>%
+  filter(str_detect(dx_prin, "^410") | str_detect(dx_prin, "^411") | str_detect(dx_prin, "^413"))
+
+#pulmonary embolism 
+ed2014_impt_pe = ed2014_impt_cv %>%
+  filter(str_detect(dx_prin, "^415"))
+
+#dysrhythmia and conduction disorder
+ed2014_impt_dys = ed2014_impt_cv %>%
+  filter(str_detect(dx_prin, "^426") | str_detect(dx_prin, "^427"))
+
+#heart failure
+ed2014_impt_hf = ed2014_impt_cv %>%
+  filter(str_detect(dx_prin, "^428"))
+
+#peripheral arterial disease
+ed2014_impt_pad = ed2014_impt_cv %>%
+  filter(str_detect(dx_prin, "^444"))
+
+
+#cerebrovascular disease
+ed2014_impt_cere = ed2014_impt_cv %>%
+  filter(str_detect(dx_prin, "^430") | str_detect(dx_prin, "^431") | str_detect(dx_prin, "^432") | str_detect(dx_prin, "^433") | str_detect(dx_prin, "^434") | str_detect(dx_prin, "^435") | str_detect(dx_prin, "^436") | str_detect(dx_prin, "^437") | str_detect(dx_prin, "^438"))
+
+ed2014_cv = rbind(ed2014_impt_ischemic, ed2014_impt_pe, ed2014_impt_dys, ed2014_impt_hf, ed2014_impt_pad, ed2014_impt_cere)
+
+write.csv(ed2014_cv, here("ed2014.csv"))
+
+dbDisconnect(mydb1)
+
+
+```
+
+2015
+```{r}
+
+mydb2 <- dbConnect(SQLite(), here("ed2015.sqlite3"))
+path = "data_original hcai files/"
+
+read_csv_chunked(here::here(paste0(path,"np_ED2015.csv")), 
+                 callback = function(chunk, dummy){
+      dbWriteTable(mydb2, "ed2015", chunk, append = T)}, 
+      chunk_size = 1000000, col_names = TRUE, col_types = "ddcccdddddccccccccccccccccccccccccccccccdddddddddddddddddddddcdddddd")
+
+dbListTables(mydb2)
+
+ed2015table <- tbl(mydb2, "ed2015")
+
+ed2015_impt= ed2015table %>%
+  select(dx_prin, faczip, fac_co, pat_id, patzip, patco, serv_dt, agyrserv, sex, race, eth, race, race_grp) %>%
+  collect()
+
+
+#CV filter
+ed2015_impt_cv = ed2015_impt %>%
+  filter(str_detect(dx_prin, "^4"))
+# 
+# #hypertension
+# ed2015_impt_hyp_1 = ed2015_impt_cv %>%
+#   filter(str_detect(dx_prin, "^401") | str_detect(dx_prin, "^402") | str_detect(dx_prin, "^403") |
+#            str_detect(dx_prin, "^404") | str_detect(dx_prin, "^405"))
+# 
+# #mi 
+# ed2015_impt_mi = ed2015_impt %>%
+#   filter(str_detect(dx_prin, "^410"))
+
+
+#ischemic heart disease
+ed2015_impt_ischemic = ed2015_impt %>%
+  filter(str_detect(dx_prin, "^410") | str_detect(dx_prin, "^411") | str_detect(dx_prin, "^413"))
+
+#pulmonary embolism 
+ed2015_impt_pe = ed2015_impt %>%
+  filter(str_detect(dx_prin, "^415"))
+
+#dysrhythmia and conduction disorder
+ed2015_impt_dys = ed2015_impt %>%
+  filter(str_detect(dx_prin, "^426") | str_detect(dx_prin, "^427"))
+
+#heart failure
+ed2015_impt_hf = ed2015_impt %>%
+  filter(str_detect(dx_prin, "^428"))
+
+#peripheral arterial disease
+ed2015_impt_pad = ed2015_impt %>%
+  filter(str_detect(dx_prin, "^444"))
+
+#cerebrovascular disease
+ed2015_impt_cere = ed2015_impt_cv %>%
+  filter(str_detect(dx_prin, "^430") | str_detect(dx_prin, "^431") | str_detect(dx_prin, "^432") | str_detect(dx_prin, "^433") | str_detect(dx_prin, "^434") | str_detect(dx_prin, "^435") | str_detect(dx_prin, "^436") | str_detect(dx_prin, "^437") | str_detect(dx_prin, "^438"))
+
+ed2015_cv = rbind(ed2015_impt_ischemic, ed2015_impt_pe, ed2015_impt_dys, ed2015_impt_hf, ed2015_impt_pad, ed2015_impt_cere)
+
+write.csv(ed2015_cv, here("ed2015.csv"))
+
+
+```
+
+2016
+```{r}
+
+mydb3 <- dbConnect(SQLite(), here("ed2016.sqlite3"))
+path = "data_original hcai files/"
+
+read_csv_chunked(here::here(paste0(path,"np_ED2016.csv")), 
+                 callback = function(chunk, dummy){
+      dbWriteTable(mydb3, "ed2016", chunk, append = T)}, 
+      chunk_size = 1000000, col_names = TRUE, col_types = "cdcccdddddccccccccccccccccccccccccccccccdddddddddddddddddddddccddddd")
+
+dbListTables(mydb3)
+
+
+ed2016table <- tbl(mydb3, "ed2016")
+
+ed2016_impt= ed2016table %>%
+  select(dx_prin, faczip, fac_co, pat_id, patzip, patco, serv_dt, agyrserv, sex, race, eth, race, race_grp) %>%
+  collect()
+
+# 
+# #hypertension
+# ed2016_hyp = ed2016_impt %>%
+#   filter(str_detect(dx_prin, "^I10") | str_detect(dx_prin, "^I11") | str_detect(dx_prin, "^I12") | str_detect(dx_prin, "^I13") | str_detect(dx_prin, "^I14") | str_detect(dx_prin, "^I15")  | str_detect(dx_prin, "^I16"))
+# 
+# #myocardial infarction
+# ed2016_mi = ed2016_impt %>%
+#   filter(str_detect(dx_prin, "^I21"))
+
+#ihd 
+ed2016_ihd = ed2016_impt %>%
+  filter(str_detect(dx_prin, "^I20") | str_detect(dx_prin, "^I21") | str_detect(dx_prin, "^I22") | str_detect(dx_prin, "^I23") | str_detect(dx_prin, "^I24") | str_detect(dx_prin, "^I25"))
+
+#pe
+ed2016_pe = ed2016_impt %>%
+  filter(str_detect(dx_prin, "^I26") | str_detect(dx_prin, "^I27") | str_detect(dx_prin, "^I28"))
+
+#dys
+ed2016_dys = ed2016_impt %>%
+  filter(str_detect(dx_prin, "^I44") | str_detect(dx_prin, "^I45") | str_detect(dx_prin, "^I46") | str_detect(dx_prin, "^I47") | str_detect(dx_prin, "^I48") | str_detect(dx_prin, "^I49"))
+
+#hf
+ed2016_hf = ed2016_impt %>%
+  filter(str_detect(dx_prin, "^I50"))
+
+#pad
+ed2016_pad = ed2016_impt %>%
+  filter(str_detect(dx_prin, "^I73"))
+
+#cerebrovascular disease
+ed2016_impt_cere = ed2016_impt %>%
+  filter(str_detect(dx_prin, "^G45") | str_detect(dx_prin, "^G46") | str_detect(dx_prin, "^I60") | str_detect(dx_prin, "^I61") | str_detect(dx_prin, "^I62") | str_detect(dx_prin, "^I63") | str_detect(dx_prin, "^I64") | str_detect(dx_prin, "^I65") | str_detect(dx_prin, "^I66") | str_detect(dx_prin, "^I67") | str_detect(dx_prin, "^I68") | str_detect(dx_prin, "^I69"))
+
+
+ed2016_cv = rbind(ed2016_ihd, ed2016_pe, ed2016_dys, ed2016_hf, ed2016_pad, ed2016_impt_cere)
+
+write.csv(ed2016_cv, here("ed2016.csv"))
+
+dbDisconnect(mydb3)
+
+
+```
+
+2017
+```{r}
+
+mydb4 <- dbConnect(SQLite(), here("ed2017.sqlite3"))
+path = "data_original hcai files/"
+
+read_csv_chunked(here::here(paste0(path,"np_ED2017.csv")),
+                 callback = function(chunk, dummy){
+      dbWriteTable(mydb4, "ed2017", chunk, append = T)}, 
+      chunk_size = 1000000, col_names = TRUE, col_types = "cdcccdddddccccccccccccccccccccccccccccccdddddddddddddddddddddccddddd")
+
+dbListTables(mydb4)
+
+
+ed2017table <- tbl(mydb4, "ed2017")
+ed2017_impt= ed2017table %>%
+  select(dx_prin, faczip, fac_co, pat_id, patzip, patco, serv_dt, agyrserv, sex, race, eth, race, race_grp) %>%
+  collect()
+
+
+# 
+# #hypertension
+# ed2017_hyp = ed2017_impt %>%
+#   filter(str_detect(dx_prin, "^I10") | str_detect(dx_prin, "^I11") | str_detect(dx_prin, "^I12") | str_detect(dx_prin, "^I13") | str_detect(dx_prin, "^I14") | str_detect(dx_prin, "^I15")  | str_detect(dx_prin, "^I16"))
+# 
+# #myocardial infarction
+# ed2017_mi = ed2017_impt %>%
+#   filter(str_detect(dx_prin, "^I21"))
+
+#ihd 
+ed2017_ihd = ed2017_impt %>%
+  filter(str_detect(dx_prin, "^I20") | str_detect(dx_prin, "^I21") | str_detect(dx_prin, "^I22") | str_detect(dx_prin, "^I23") | str_detect(dx_prin, "^I24") | str_detect(dx_prin, "^I25"))
+
+#pe
+ed2017_pe = ed2017_impt %>%
+  filter(str_detect(dx_prin, "^I26") | str_detect(dx_prin, "^I27") | str_detect(dx_prin, "^I28"))
+
+#dys
+ed2017_dys = ed2017_impt %>%
+  filter(str_detect(dx_prin, "^I44") | str_detect(dx_prin, "^I45") | str_detect(dx_prin, "^I46") | str_detect(dx_prin, "^I47") | str_detect(dx_prin, "^I48") | str_detect(dx_prin, "^I49"))
+
+#hf
+ed2017_hf = ed2017_impt %>%
+  filter(str_detect(dx_prin, "^I50"))
+
+#pad
+ed2017_pad = ed2017_impt %>%
+  filter(str_detect(dx_prin, "^I73"))
+
+#cerebrovascular disease
+ed2017_impt_cere = ed2017_impt %>%
+  filter(str_detect(dx_prin, "^G45") | str_detect(dx_prin, "^G46") | str_detect(dx_prin, "^I60") | str_detect(dx_prin, "^I61") | str_detect(dx_prin, "^I62") | str_detect(dx_prin, "^I63") | str_detect(dx_prin, "^I64") | str_detect(dx_prin, "^I65") | str_detect(dx_prin, "^I66") | str_detect(dx_prin, "^I67") | str_detect(dx_prin, "^I68") | str_detect(dx_prin, "^I69"))
+
+ed2017_cv = rbind(ed2017_ihd, ed2017_pe, ed2017_dys, ed2017_hf, ed2017_pad, ed2017_impt_cere)
+
+write.csv(ed2017_cv, here("ed2017.csv"))
+
+dbDisconnect(mydb4)
+```
+
+merge ed2013 - 15 to see how big it is
+
+```{r}
+ed2013 = read.csv(here('ed2013.csv'))
+ed2014 = read.csv(here('ed2014.csv'))
+ed2015 = read.csv(here('ed2015.csv'))
+
+
+ed_13_15 = rbind(ed2013,ed2014,ed2015)
+
+ed_13_15 = ed_13_15 %>%
+  select(-X)
+
+#file size = 813970 x 7 variables
+
+```
+
+
+2018
+```{r}
+mydb5 <- dbConnect(SQLite(), here("ed2018.sqlite3"))
+
+path = "data_original hcai files/"
+
+read_csv_chunked(here::here(paste0(path,"np_ED2018.csv")),
+                 callback = function(chunk, dummy){
+      dbWriteTable(mydb5, "ed2018", chunk, append = T)}, 
+      chunk_size = 1000000, col_names = TRUE, col_types = "cdcccdddddccccccccccccccccccccccccccccccdddddddddddddddddddddccddddd")
+
+dbListTables(mydb5)
+
+ed2018table <- tbl(mydb5, "ed2018")
+
+ed2018_impt= ed2018table %>%
+  select(dx_prin, faczip, fac_co, pat_id, patzip, patco, serv_dt, agyrserv, sex, race, eth, race_grp) %>%
+#   collect()
+# 
+# #hypertension
+# ed2018_hyp = ed2018_impt %>%
+#   filter(str_detect(dx_prin, "^I10") | str_detect(dx_prin, "^I11") | str_detect(dx_prin, "^I12") | str_detect(dx_prin, "^I13") | str_detect(dx_prin, "^I14") | str_detect(dx_prin, "^I15")  | str_detect(dx_prin, "^I16"))
+# 
+# #myocardial infarction
+# ed2018_mi = ed2018_impt %>%
+#   filter(str_detect(dx_prin, "^I21"))
+
+#ihd 
+ed2018_ihd = ed2018_impt %>%
+  filter(str_detect(dx_prin, "^I20") | str_detect(dx_prin, "^I21") | str_detect(dx_prin, "^I22") | str_detect(dx_prin, "^I23") | str_detect(dx_prin, "^I24") | str_detect(dx_prin, "^I25"))
+
+#pe
+ed2018_pe = ed2018_impt %>%
+  filter(str_detect(dx_prin, "^I26") | str_detect(dx_prin, "^I27") | str_detect(dx_prin, "^I28"))
+
+#dys
+ed2018_dys = ed2018_impt %>%
+  filter(str_detect(dx_prin, "^I44") | str_detect(dx_prin, "^I45") | str_detect(dx_prin, "^I46") | str_detect(dx_prin, "^I47") | str_detect(dx_prin, "^I48") | str_detect(dx_prin, "^I49"))
+
+#hf
+ed2018_hf = ed2018_impt %>%
+  filter(str_detect(dx_prin, "^I50"))
+
+#pad
+ed2018_pad = ed2018_impt %>%
+  filter(str_detect(dx_prin, "^I73"))
+
+#cerebrovascular disease
+ed2018_impt_cere = ed2018_impt %>%
+  filter(str_detect(dx_prin, "^G45") | str_detect(dx_prin, "^G46") | str_detect(dx_prin, "^I60") | str_detect(dx_prin, "^I61") | str_detect(dx_prin, "^I62") | str_detect(dx_prin, "^I63") | str_detect(dx_prin, "^I64") | str_detect(dx_prin, "^I65") | str_detect(dx_prin, "^I66") | str_detect(dx_prin, "^I67") | str_detect(dx_prin, "^I68") | str_detect(dx_prin, "^I69"))
+
+ed2018_cv = rbind(ed2018_ihd, ed2018_pe, ed2018_dys, ed2018_hf, ed2018_pad, ed2018_impt_cere)
+
+write.csv(ed2018_cv, here("ed2018.csv"))
+
+dbDisconnect(mydb5)
+```
+
+2019
+```{r}
+
+mydb6 <- dbConnect(SQLite(), here("ed2019.sqlite3"))
+
+path = "data_original hcai files/"
+
+read_csv_chunked(here::here(paste0(path,"np_ED2019.csv")),
+                 callback = function(chunk, dummy){
+      dbWriteTable(mydb6, "ed2019", chunk, append = T)}, 
+      chunk_size = 1000000, col_names = TRUE, col_types = "ddddddccccccccdddddddddcdddcccccccccccccccccccccccccdddddddddddddddddddddddddcccccccccccc")
+# 
+# example2019 = read.csv("np_ED2019.csv", nrows=10)
+# dbListTables(mydb6)
+
+ed2019table <- tbl(mydb6, "ed2019")
+
+ed2019_impt= ed2019table %>%
+  select(oshpd_id, oshpd_id9, diag_p, hplzip, hplcnty, pat_id, patzip, patcnty, serv_dt, agyrserv, sex, race1, ethncty, race_grp) %>%
+  collect()
+
+
+# 
+# #hypertension
+# ed2019_hyp = ed2019_impt %>%
+#   filter(str_detect(diag_p, "^I10") | str_detect(diag_p, "^I11") | str_detect(diag_p, "^I12") | str_detect(diag_p, "^I13") | str_detect(diag_p, "^I14") | str_detect(diag_p, "^I15")  | str_detect(diag_p, "^I16"))
+# 
+# #myocardial infarction
+# ed2019_mi = ed2019_impt %>%
+#   filter(str_detect(diag_p, "^I21"))
+
+#ihd 
+ed2019_ihd = ed2019_impt %>%
+  filter(str_detect(diag_p, "^I20") | str_detect(diag_p, "^I21") | str_detect(diag_p, "^I22") | str_detect(diag_p, "^I23") | str_detect(diag_p, "^I24") | str_detect(diag_p, "^I25"))
+
+
+#pe
+ed2019_pe = ed2019_impt %>%
+  filter(str_detect(diag_p, "^I26") | str_detect(diag_p, "^I27") | str_detect(diag_p, "^I28"))
+
+#dys
+ed2019_dys = ed2019_impt %>%
+  filter(str_detect(diag_p, "^I44") | str_detect(diag_p, "^I45") | str_detect(diag_p, "^I46") | str_detect(diag_p, "^I47") | str_detect(diag_p, "^I48") | str_detect(diag_p, "^I49"))
+
+#hf
+ed2019_hf = ed2019_impt %>%
+  filter(str_detect(diag_p, "^I50"))
+
+#pad
+ed2019_pad = ed2019_impt %>%
+  filter(str_detect(diag_p, "^I73"))
+
+#cerebrovascular disease
+ed2019_impt_cere = ed2019_impt %>%
+  filter(str_detect(diag_p, "^G45") | str_detect(diag_p, "^G46") | str_detect(diag_p, "^I60") | str_detect(diag_p, "^I61") | str_detect(diag_p, "^I62") | str_detect(diag_p, "^I63") | str_detect(diag_p, "^I64") | str_detect(diag_p, "^I65") | str_detect(diag_p, "^I66") | str_detect(diag_p, "^I67") | str_detect(diag_p, "^I68") | str_detect(diag_p, "^I69"))
+
+ed2019_cv = rbind(ed2019_ihd, ed2019_pe, ed2019_dys, ed2019_hf, ed2019_pad,ed2019_impt_cere)
+
+write.csv(ed2019_cv, here("ed2019.csv"))
+dbDisconnect(mydb6)
+
+
+```
+
+2020
+```{r}
+mydb7 <- dbConnect(SQLite(), here("ed2020.sqlite3"))
+
+path = "data_original hcai files/"
+
+read_csv_chunked(here::here(paste0(path,"np_ED2020.csv")),
+                 callback = function(chunk, dummy){
+      dbWriteTable(mydb7, "ed2020", chunk, append = T)}, 
+      chunk_size = 1000000, col_names = TRUE, col_types = "ddddddccccccccdddddddddcdddcccccccccccccccccccccccccdddddddddddddddddddddddddcccccccccccc")
+
+dbListTables(mydb7)
+
+ed2020table <- tbl(mydb7, "ed2020")
+
+
+ed2020_impt= ed2020table %>%
+  select(oshpd_id, oshpd_id9, diag_p, hplzip, hplcnty, pat_id, patzip, patcnty, serv_dt, agyrserv, sex, race1, ethncty, race_grp) %>%  
+  collect()
+# 
+# #hypertension
+# ed2020_hyp = ed2020_impt %>%
+#   filter(str_detect(diag_p, "^I10") | str_detect(diag_p, "^I11") | str_detect(diag_p, "^I12") | str_detect(diag_p, "^I13") | str_detect(diag_p, "^I14") | str_detect(diag_p, "^I15")  | str_detect(diag_p, "^I16"))
+# 
+# #myocardial infarction
+# ed2020_mi = ed2020_impt %>%
+#   filter(str_detect(diag_p, "^I21"))
+
+#ihd 
+ed2020_ihd = ed2020_impt %>%
+  filter(str_detect(diag_p, "^I20") | str_detect(diag_p, "^I21") | str_detect(diag_p, "^I22") | str_detect(diag_p, "^I23") | str_detect(diag_p, "^I24") | str_detect(diag_p, "^I25"))
+
+
+#pe
+ed2020_pe = ed2020_impt %>%
+  filter(str_detect(diag_p, "^I26") | str_detect(diag_p, "^I27") | str_detect(diag_p, "^I28"))
+
+#dys
+ed2020_dys = ed2020_impt %>%
+  filter(str_detect(diag_p, "^I44") | str_detect(diag_p, "^I45") | str_detect(diag_p, "^I46") | str_detect(diag_p, "^I47") | str_detect(diag_p, "^I48") | str_detect(diag_p, "^I49"))
+
+#hf
+ed2020_hf = ed2020_impt %>%
+  filter(str_detect(diag_p, "^I50"))
+
+#pad
+ed2020_pad = ed2020_impt %>%
+  filter(str_detect(diag_p, "^I73"))
+
+#cerebrovascular disease
+ed2020_impt_cere = ed2020_impt %>%
+  filter(str_detect(diag_p, "^G45") | str_detect(diag_p, "^G46") | str_detect(diag_p, "^I60") | str_detect(diag_p, "^I61") | str_detect(diag_p, "^I62") | str_detect(diag_p, "^I63") | str_detect(diag_p, "^I64") | str_detect(diag_p, "^I65") | str_detect(diag_p, "^I66") | str_detect(diag_p, "^I67") | str_detect(diag_p, "^I68") | str_detect(diag_p, "^I69"))
+
+
+ed2020_cv = rbind(ed2020_ihd, ed2020_pe, ed2020_dys, ed2020_hf, ed2020_pad, ed2020_impt_cere)
+
+write.csv(ed2020_cv, here("ed2020.csv"))
+
+dbDisconnect(mydb7)
+```
+
+
+
+read in heat warnings
+```{r}
+
+heat = read_excel("heatwarnings20132020.xlsx")
+ugckey2 = read_excel("ugc_zone_convert.xlsx")
+
+
+heat1 = heat %>%
+  select(wfo:is_emergency) %>%
+  select(-c(hvtec_nwsli, hvtec_severity, hvtec_cause, hvtec_record)) %>%
+  mutate(issuedate = format(as.Date(utc_issue), "%Y/%m/%d")) %>%
+  mutate(expdate = format(as.Date(utc_expire), "%Y/%m/%d")) %>%
+  mutate(heatdays = as.numeric(difftime(expdate, issuedate, units ="days"))) %>%
+  mutate(issuedate = format(as.Date(utc_issue), "%m/%d/%Y")) %>%
+  mutate(expdate = format(as.Date(utc_issue), "%m/%d/%Y")) %>%
+  arrange(issuedate) %>%
+  filter(heatdays >= 0) %>%
+  mutate(ugc = sprintf("%06s", ugc)) %>%
+  mutate(zone = as.integer(substr(ugc, 4, 6))) %>%
+  mutate(zone = sprintf("%03d", zone)) %>%
+  mutate(state_zone = paste("CA", zone, sep=""))
+
+#filter latest ugc key
+cali = ugckey2 %>%
+  filter(state=="CA")
+
+heat2 = heat1 %>%
+  merge(cali, by = "state_zone")
+
+
+```
+
+
+12/20/23
+cleaning up new ED files and turning them into excel format
+```{r}
+
+newpath = "data_csv ed files updated/"
+
+ed2013 = read.csv(here::here(paste0(newpath,("ed2013.csv"))))
+ed2014 = read.csv(here::here(paste0(newpath,("ed2014.csv"))))
+ed2015 = read.csv(here::here(paste0(newpath,("ed2015.csv"))))
+ed2016 = read.csv(here::here(paste0(newpath,("ed2016.csv"))))
+ed2017 = read.csv(here::here(paste0(newpath,("ed2017.csv"))))
+ed2018 = read.csv(here::here(paste0(newpath,("ed2018.csv"))))
+ed2019 = read.csv(here::here(paste0(newpath,("ed2019.csv"))))
+ed2020 = read.csv(here::here(paste0(newpath,("ed2020.csv"))))
+
+minimalclean = function(data) {
+  data1 = data %>%
+    select(-X)
+  
+  return(data1)
+}
+renamefct = function(data) {
+   data1 = data %>%
+    rename(dx_prin = diag_p) %>%
+    rename(faczip = hplzip) %>%
+    rename(fac_co = hplcnty) %>%
+    rename(patco = patcnty) %>% 
+    rename(race = race1) %>%
+    rename(eth=ethncty)%>%
+    select(-X, -oshpd_id, -oshpd_id9)
+  return(data1)
+}
+
+ed2013_1 = minimalclean(ed2013)
+ed2014_1 = minimalclean(ed2014)
+ed2015_1 = minimalclean(ed2015)
+ed2016_1 = minimalclean(ed2016)
+ed2017_1 = minimalclean(ed2017)
+ed2018_1 = minimalclean(ed2018)
+
+
+ed2019_1 = renamefct(ed2019)
+ed2020_1 = renamefct(ed2020)
+
+newpath_clean = "data_csv ed files updated clean/"
+
+library(writexl)
+write_xlsx(ed2013_1, here::here(paste0(newpath_clean,"ed2013.xlsx")))
+write_xlsx(ed2014_1, here::here(paste0(newpath_clean,"ed2014.xlsx")))
+write_xlsx(ed2015_1, here::here(paste0(newpath_clean,"ed2015.xlsx")))
+write_xlsx(ed2016_1, here::here(paste0(newpath_clean,"ed2016.xlsx")))
+write_xlsx(ed2017_1, here::here(paste0(newpath_clean,"ed2017.xlsx")))
+write_xlsx(ed2018_1, here::here(paste0(newpath_clean,"ed2018.xlsx")))
+write_xlsx(ed2019_1, here::here(paste0(newpath_clean,"ed2019.xlsx")))
+write_xlsx(ed2020_1, here::here(paste0(newpath_clean,"ed2020.xlsx")))
+
+
+
+
+
+```
+

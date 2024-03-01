@@ -1,0 +1,119 @@
+---
+title: "pm 2.5 processing"
+author: "Annabel Tan"
+date: "2023-11-27"
+output: html_document
+---
+processing pm2.5 data
+```{r, message=FALSE}
+library(here)
+library(tidyverse)
+library(ggplot2)
+library(lubridate)  # for handling dates
+
+
+here::i_am("pm25.rmd")
+
+pm25 = read.csv("Daily_Census_Tract-Level_PM2.5_Concentrations__2016_-_2019.csv", header=TRUE)
+pm25_1 = read.csv("Daily_Census_Tract-Level_PM2.5_Concentrations__2011-2015.csv", header=TRUE)
+
+ca_zipcode = read.csv("California_Zip_Codes.csv", header=TRUE)
+ca_zipcode_1 <- ca_zipcode %>%
+  filter(grepl("^9", ZIP_CODE))
+zipcode = ca_zipcode_1$ZIP_CODE
+
+```
+
+2016-2019 pm levels
+```{r}
+#filter for pm2.5 values in only CA zipcodes 
+pm25cut = pm25 %>%
+  mutate(ctfips = sprintf("%10s", ctfips)) %>%
+  mutate(zip = as.integer(substr(ctfips, 1, 5))) %>%
+  filter(zip %in% zipcode) %>%
+  mutate(datenew = as.Date(date, format = "%d%b%Y"))
+
+#average pm2.5 over all census tracts in a zipcode
+pm25cut2 = pm25cut %>%
+  group_by(datenew, zip) %>%
+  mutate(meanpm25 = mean(DS_PM_pred))
+  
+#filter out unique dates and zipcodes
+pm25cut3 = pm25cut2 %>%
+  distinct(datenew, zip, meanpm25) %>%
+  filter(!is.na(datenew) & !is.na(zip)) %>%
+  mutate(year = year(datenew)) %>%
+  mutate(month = month(datenew))
+
+#save pm2.5 values from 2016 to 2019
+saveRDS(pm25cut3, "pm25_2016_2019.rds")
+
+  
+```
+
+filter 2011-2015 levels
+```{r}
+#filter for pm2.5 values in only CA zipcodes 
+pm25cut_1 = pm25_1 %>%
+  mutate(ctfips = sprintf("%10s", ctfips)) %>%
+  mutate(zip = as.integer(substr(ctfips, 1, 5))) %>%
+  filter(zip %in% zipcode) %>%
+  mutate(datenew = as.Date(date, format = "%d%b%Y"))
+
+#average pm2.5 over all census tracts in a zipcode
+pm25cut2_1 = pm25cut_1 %>%
+  group_by(datenew, zip) %>%
+  mutate(meanpm25 = mean(DS_PM_pred))
+  
+#filter out unique dates and zipcodes
+pm25cut3_1 = pm25cut2_1 %>%
+  distinct(datenew, zip, meanpm25) %>%
+  filter(!is.na(datenew) & !is.na(zip)) %>%
+  mutate(year = year(datenew)) %>%
+  mutate(month = month(datenew))
+
+#filter out 2013 to 2015
+pm25cut3_2 = pm25cut3_1 %>%
+  filter(year >= 2013)
+
+#save pm2.5 values from 2013 to 2019
+saveRDS(pm25cut3_2, "pm25_2013_2015.rds")
+
+```
+
+merge two pm2.5 files together
+```{r}
+pm1  = readRDS("pm25_2013_2015.rds")
+pm2 =  readRDS("pm25_2016_2019.rds")
+
+pm_total = rbind(pm1, pm2)
+
+pm_total = pm_total %>%
+  arrange(year, zip) %>%
+  rename(pm25 = meanpm25)
+
+saveRDS(pm_total, "pm25_2013_2019.rds")
+
+
+```
+
+
+loading Reid et al PM25 data 2008-2018
+```{r}
+pm25 = load("Ensemble_preds_with_CMAQ_california.Rdata")
+
+head(DF, n=10)
+
+pm2013 = DF %>%
+  filter(!is.na(ZCTA5_code)) %>%
+  mutate(datenew = as.Date(Date, format = "%Y-%m-%d")) %>%
+  filter(datenew>= "2013-01-01" & datenew<= "2013-12-31") %>%
+  mutate(zip = ZCTA5_code)
+cols_to_remove = c(1,2,3,4,5,6) 
+pm2013 <- pm2013[, -cols_to_remove] 
+
+saveRDS(pm2013, "pm2013_cmaq.rds")
+
+
+```
+

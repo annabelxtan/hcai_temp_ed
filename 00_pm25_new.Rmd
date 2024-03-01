@@ -1,0 +1,29 @@
+---
+title: "pm 2.5 new"
+author: "Annabel Tan"
+date: "2023-12-05"
+output: html_document
+---
+
+Citation for the PM2.5 dataset I will be using
+Rosana Aguilera, Nana Luo, Rupa Basu, Jun Wu, Rachel Clemesha, Alexander Gershunov, Tarik Benmarhnia,
+A novel ensemble-based statistical approach to estimate daily wildfire-specific PM2.5 in California (2006–2020),
+Environment International,
+Volume 171,
+2023,
+107719,
+
+```{r}
+library(here)
+library(tidyverse)
+library(ggplot2)
+library(lubridate)  # for handling dates
+
+here::i_am("00_pm25_new.rmd")
+```
+
+```{r}
+pm2013new = read.csv("CAzip_wfpm25_2013.csv", header=TRUE)
+
+```
+
